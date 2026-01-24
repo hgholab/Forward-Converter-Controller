@@ -12,7 +12,7 @@
 #define IWDG_KEY_RELOAD           0x0000AAAAUL
 #define IWDG_PRESCALER_64         0x00000004UL
 #define IWDG_PRESCALER            64UL
-#define IWDG_TIMEOUT              5.0f
+#define IWDG_TIMEOUT              2.0f
 
 static uint32_t iwdg_compute_rlr(float timeout_s, uint32_t lsi_hz, uint32_t prescaler);
 static bool iwdg_is_ready(void);

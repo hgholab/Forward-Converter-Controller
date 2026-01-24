@@ -1,134 +1,100 @@
-/*
- * controller.c
- *
- * Description:
- *     Discrete-time PID controller implementation.
- *
- * Notes:
- *     - pid_init() initializes controller parameters and state.
- *     - pid_update() computes one control step.
- *     - Gain and reference setter/getter functions are provided.
- */
-
 #include "controller.h"
 
-#include "utils.h"
+#define MAX_DUTY 0.45f
 
-struct pid_controller
+/*
+ * Static variables storing past samples:
+ *   x1 = x[k-1], x2 = x[k-2]
+ *   y1 = y[k-1], y2 = y[k-2]
+ * Here, x denotes the error signal and y denotes the compensator output signal.
+ *
+ * These implement the memory required by the discrete-time compensator.
+ */
+static float x1 = 0.0f, x2 = 0.0f;
+static float y1 = 0.0f, y2 = 0.0f;
+
+static float controller_reference = 0.0f; // Controller instantaneous reference value.
+
+float controller_step(float x)
 {
-        float kp;
-        float ki;
-        float kd;
-        float Ts;
-        float prev_error;
-        float integral;
-        float int_out_min;
-        float int_out_max;
-        float controller_out_min;
-        float controller_out_max;
-};
+        /*
+         * Coefficients derived from the z-domain transfer function:
+         *
+         *            10.290000 - 18.280000 z^-1 + 8.094000 z^-2
+         * Gcd(z) = ----------------------------------------------
+         *             1.000000 -  0.903900 z^-1 - 0.096090 z^-2
+         *
+         * Difference equation:
+         *
+         *   y[k] = 10.290000 * x[k]
+         *        - 18.280000 * x[k-1]
+         *        +  8.094000 * x[k-2]
+         *        +  0.903900 * y[k-1]
+         *        +  0.096090 * y[k-2]
+         */
+        const float b0 = 10.29f;
+        const float b1 = -18.28f;
+        const float b2 = 8.094f;
+        const float c1 = 0.9039f;
+        const float c2 = 0.09609f;
 
-static float reference = 40.0f; // Value of the reference at the start-up.
-static struct pid_controller pid;
+        // Compute current output y[k] using the difference equation.
+        float y = (b0 * x) + (b1 * x1) + (b2 * x2) + (c1 * y1) + (c2 * y2);
 
-void pid_init(float kp,
-              float ki,
-              float kd,
-              float Ts,
-              float int_out_min,
-              float int_out_max,
-              float controller_out_min,
-              float controller_out_max)
-{
-        pid.kp                 = kp;
-        pid.ki                 = ki;
-        pid.kd                 = kd;
-        pid.Ts                 = Ts; // Sampling time in seconds
-        pid.prev_error         = 0.0f;
-        pid.integral           = 0.0f; // Accumulated integral term
-        pid.int_out_min        = int_out_min;
-        pid.int_out_max        = int_out_max;
-        pid.controller_out_min = controller_out_min;
-        pid.controller_out_max = controller_out_max;
+        /*
+         * Shift for next instant:
+         *   x2 <- x1,  x1 <- x
+         *   y2 <- y1,  y1 <- y
+         */
+        x2 = x1;
+        x1 = x;
+
+        y2 = y1;
+        y1 = y;
+
+        /**
+         * Clamp the compensator output to make sure that duty cycle stays equal or less than
+         * MAX_DUTY which we have chosen to be 0.45 so that we have enough headroom. In 2-switch
+         * forward converter, duty cycle should be less than 0.5 (50%) so that the transformer could
+         * demagnetize safely.
+         */
+        y = y > MAX_DUTY ? MAX_DUTY : y;
+
+        return y;
 }
 
-float pid_update(float reference, float measurement)
+/*
+ * This function generates the reference voltage which increases like a ramp at the beginning to
+ * prevent current inrush. Smaller steps make the reference reach its final value slower, but has
+ * better effect on inrush current alleviation.
+ */
+void controller_step_ref(float current, float target, float step)
 {
-        // Compute error.
-        float error = reference - measurement;
-
-        // Calculate proportional term.
-        float p = pid.kp * error;
-
-        // Calculate integral term.
-        pid.integral += (pid.ki * pid.Ts * error);
-
-        // limit integral term to avoid windup.
-        pid.integral = CLAMP(pid.integral, pid.int_out_min, pid.int_out_max);
-
-        float i = pid.integral;
-
-        // Calculate derivative term.
-        float d = (error - pid.prev_error) * (pid.kd / pid.Ts);
-
-        // Calculate PID controller output.
-        float output = p + i + d;
-
-        // Apply output saturation.
-        output = CLAMP(output, pid.controller_out_min, pid.controller_out_max);
-
-        // Save state for next call.
-        pid.prev_error = error;
-
-        return output;
+        // At any call of this function, we should have current <= target.
+        if (current < target)
+        {
+                current += step;
+                if (current > target)
+                {
+                        current = target;
+                }
+        }
+        controller_reference = current;
+}
+/**
+ * This function is used to reset the controller variables so that when the converter is turned
+ * on again it can start from a clean slate.
+ */
+void controller_reset(void)
+{
+        controller_reference = 0.0f;
+        x1                   = 0.0f;
+        x2                   = 0.0f;
+        y1                   = 0.0f;
+        y2                   = 0.0f;
 }
 
-void pid_set_kp(float kp)
+float controller_get_ref(void)
 {
-        pid.kp = kp;
-}
-
-float pid_get_kp()
-{
-        return pid.kp;
-}
-
-void pid_set_ki(float ki)
-{
-        pid.ki = ki;
-}
-
-float pid_get_ki()
-{
-        return pid.ki;
-}
-
-void pid_set_kd(float kd)
-{
-        pid.kd = kd;
-}
-
-float pid_get_kd()
-{
-        return pid.kd;
-}
-
-void pid_set_ref(float new_ref)
-{
-        reference = new_ref;
-}
-
-float pid_get_ref(void)
-{
-        return reference;
-}
-
-void pid_clear_integrator(void)
-{
-        pid.integral = 0;
-}
-
-void pid_clear_prev_error(void)
-{
-        pid.prev_error = 0;
+        return controller_reference;
 }

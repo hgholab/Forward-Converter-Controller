@@ -7,9 +7,9 @@
 #define HSE_CLK      8000000UL
 #define SYSCLK       100000000UL
 #define HCLK         100000000UL
-#define PCLK1        (HCLK / 2)
-#define PCLK2        (HCLK / 1)
-#define APB1_TIM_CLK (PCLK1 * 2)
+#define PCLK1        (HCLK / 2UL) 
+#define PCLK2        (HCLK / 1UL)
+#define APB1_TIM_CLK (PCLK1 * 2UL)
 #define APB2_TIM_CLK (PCLK2)
 
 void clock_init(void);

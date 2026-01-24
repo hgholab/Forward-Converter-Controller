@@ -1,24 +1,4 @@
-/*
- * clocks.c
- *
- * Description:
- *     Provides full system clock initialization for the board.
- *
- *     This module:
- *     - Enables the external high-speed clock (HSE) in bypass mode
- *     - Configures Flash wait states and enables caches
- *     - Sets AHB, APB1, and APB2 prescalers
- *     - Configures the main PLL using HSE as the clock source
- *     - Enables the PLL and switches SYSCLK to the PLL output
- *
- *     The final system clock configuration is:
- *         SYSCLK = 100 MHz (from PLL)
- *         HCLK   = 100 MHz
- *         PCLK1  = 50  MHz
- *         PCLK2  = 100 MHz
- */
-
-#include <stddef.h> // stddef.h is used to access size_t type definition.
+#include <stddef.h>
 #include <stdint.h>
 
 #include "stm32f4xx.h"

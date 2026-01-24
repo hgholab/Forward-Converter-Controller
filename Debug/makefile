@@ -33,34 +33,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Final_Project
+BUILD_ARTIFACT_NAME := forward_converter_controller
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Final_Project.elf \
+forward_converter_controller.elf \
 
 MAP_FILES += \
-Final_Project.map \
+forward_converter_controller.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Final_Project.list \
+forward_converter_controller.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Final_Project.elf secondary-outputs
+main-build: forward_converter_controller.elf secondary-outputs
 
 # Tool invocations
-Final_Project.elf Final_Project.map: $(OBJS) $(USER_OBJS) C:\Users\hgholab\OneDrive\Source\ Code\Embedded\ Systems\Modules\Final_Project\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Final_Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\hgholab\OneDrive\Source Code\Embedded Systems\Modules\Final_Project\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Final_Project.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+forward_converter_controller.elf forward_converter_controller.map: $(OBJS) $(USER_OBJS) C:\Users\hgholab\OneDrive\Source\ Code\Embedded\ Systems\Modules\forward_converter_controller\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "forward_converter_controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\hgholab\OneDrive\Source Code\Embedded Systems\Modules\forward_converter_controller\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="forward_converter_controller.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -69,14 +69,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Final_Project.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Final_Project.list"
+forward_converter_controller.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "forward_converter_controller.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Final_Project.elf Final_Project.list Final_Project.map default.size.stdout
+	-$(RM) default.size.stdout forward_converter_controller.elf forward_converter_controller.list forward_converter_controller.map
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

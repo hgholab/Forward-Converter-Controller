@@ -1,16 +1,3 @@
-/*
- * gpio.c
- *
- * Description:
- *     Enables clocks for GPIO ports and configures GPIO pins.
- *     On Port A, this file configures:
- *     - PA2 as USART2_TX (AF07)
- *     - PA3 as USART2_RX (AF07)
- *     - PA5 as TIM2_CH1  (AF01)
- *     And on Port C, it configures:
- *     - PC13 as the board push button
- */
-
 #include <stdint.h>
 
 #include "stm32f4xx.h"
@@ -45,6 +32,36 @@
 
 typedef enum
 {
+        GPIO_PORT_A,
+        GPIO_PORT_B,
+        GPIO_PORT_C,
+        GPIO_PORT_D,
+        GPIO_PORT_E,
+        GPIO_PORT_H
+} gpio_port_t;
+
+typedef enum
+{
+        GPIO_PIN_0,
+        GPIO_PIN_1,
+        GPIO_PIN_2,
+        GPIO_PIN_3,
+        GPIO_PIN_4,
+        GPIO_PIN_5,
+        GPIO_PIN_6,
+        GPIO_PIN_7,
+        GPIO_PIN_8,
+        GPIO_PIN_9,
+        GPIO_PIN_10,
+        GPIO_PIN_11,
+        GPIO_PIN_12,
+        GPIO_PIN_13,
+        GPIO_PIN_14,
+        GPIO_PIN_15
+} gpio_pin_t;
+
+typedef enum
+{
         GPIO_PIN_MODE_INPUT,
         GPIO_PIN_MODE_OUTPUT,
         GPIO_PIN_MODE_ALTERNATE,
@@ -72,9 +89,6 @@ typedef enum
         GPIO_PUPD_PULL_DOWN
 } gpio_pupd_t;
 
-// This variable shows previous state of button being pushed or not (stable state).
-bool button_last_push_status = false;
-
 static uint32_t const gpio_port_rcc_ahb1_en[]       = {RCC_AHB1ENR_GPIOAEN,
                                                        RCC_AHB1ENR_GPIOBEN,
                                                        RCC_AHB1ENR_GPIOCEN,
@@ -83,6 +97,7 @@ static uint32_t const gpio_port_rcc_ahb1_en[]       = {RCC_AHB1ENR_GPIOAEN,
                                                        RCC_AHB1ENR_GPIOHEN};
 static GPIO_TypeDef *const gpio_port_base_address[] = {GPIOA, GPIOB, GPIOC, GPIOD, GPIOE, GPIOH};
 
+static bool gpio_read_pin_input(gpio_port_t port, gpio_pin_t pin);
 static void gpio_enable_port_clock(gpio_port_t port);
 static void gpio_set_pin_mode(gpio_port_t port, gpio_pin_t pin, gpio_pin_mode_t mode);
 static void
@@ -101,59 +116,14 @@ void gpio_init(void)
         gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_5, 1UL);
         gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_5, GPIO_PIN_MODE_ALTERNATE);
 
+        // Set PA1 to analog mode to function as ADC input.
+        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_1, GPIO_PIN_MODE_ANALOG);
+        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_1, GPIO_PUPD_NONE);
+
         // Enable clock for port C and configure PC13 as the board push button.
         gpio_enable_port_clock(GPIO_PORT_C);
         gpio_set_pin_mode(GPIO_PORT_C, GPIO_PIN_13, GPIO_PIN_MODE_INPUT);
         gpio_set_pin_pupd(GPIO_PORT_C, GPIO_PIN_13, GPIO_PUPD_PULL_UP);
-
-        // Set PA2 as USART2_TX.
-        gpio_set_pin_ospeed(GPIO_PORT_A, GPIO_PIN_2, GPIO_SPEED_VERY_HIGH);
-        gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_2, GPIO_OTYPE_PUSH_PULL);
-        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_2, GPIO_PUPD_NONE);
-        gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_2, 7UL);
-        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_2, GPIO_PIN_MODE_ALTERNATE);
-
-        // Set PA3 as USART2_RX.
-        gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_3, 7UL);
-        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_3, GPIO_PIN_MODE_ALTERNATE);
-
-        // Set PA8 as blue (idle mode) LED
-        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_8, GPIO_PIN_MODE_OUTPUT);
-        gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_8, GPIO_OTYPE_PUSH_PULL);
-        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_8, GPIO_PUPD_NONE);
-
-        // Enable clock for port B and set PB4 as yellow (config mode) LED
-        gpio_enable_port_clock(GPIO_PORT_B);
-        gpio_set_pin_mode(GPIO_PORT_B, GPIO_PIN_4, GPIO_PIN_MODE_OUTPUT);
-        gpio_set_pin_otype(GPIO_PORT_B, GPIO_PIN_4, GPIO_OTYPE_PUSH_PULL);
-        gpio_set_pin_pupd(GPIO_PORT_B, GPIO_PIN_4, GPIO_PUPD_NONE);
-
-        // Set PB3 as white (mod mode) LED
-        gpio_set_pin_mode(GPIO_PORT_B, GPIO_PIN_3, GPIO_PIN_MODE_OUTPUT);
-        gpio_set_pin_otype(GPIO_PORT_B, GPIO_PIN_3, GPIO_OTYPE_PUSH_PULL);
-        gpio_set_pin_pupd(GPIO_PORT_B, GPIO_PIN_3, GPIO_PUPD_NONE);
-}
-
-// atomic set: write 1 to lower 16 bits.
-void gpio_set_pin(gpio_port_t port, gpio_pin_t pin)
-{
-        gpio_port_base_address[port]->BSRR = (1UL << pin);
-}
-
-// atomic clear: write 1 to upper 16 bits.
-void gpio_clear_pin(gpio_port_t port, gpio_pin_t pin)
-{
-        gpio_port_base_address[port]->BSRR = (1UL << (pin + 16U));
-}
-
-void gpio_toggle_pin(gpio_port_t port, gpio_pin_t pin)
-{
-        gpio_port_base_address[port]->ODR ^= (1UL << pin);
-}
-
-bool gpio_read_pin_input(gpio_port_t port, gpio_pin_t pin)
-{
-        return (gpio_port_base_address[port]->IDR & (1UL << pin)) != 0;
 }
 
 /*
@@ -176,6 +146,11 @@ bool gpio_button_is_pressed(void)
         }
 
         return button_is_pressed;
+}
+
+static bool gpio_read_pin_input(gpio_port_t port, gpio_pin_t pin)
+{
+        return (gpio_port_base_address[port]->IDR & (1UL << pin)) != 0;
 }
 
 static void gpio_enable_port_clock(gpio_port_t port)
