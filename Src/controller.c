@@ -2,6 +2,8 @@
 
 #define MAX_DUTY 0.45f
 
+bool controller_ref_reached_target = false;
+
 /*
  * Static variables storing past samples:
  *   x1 = x[k-1], x2 = x[k-2]
@@ -52,7 +54,7 @@ float controller_step(float x)
         y2 = y1;
         y1 = y;
 
-        /**
+        /*
          * Clamp the compensator output to make sure that duty cycle stays equal or less than
          * MAX_DUTY which we have chosen to be 0.45 so that we have enough headroom. In 2-switch
          * forward converter, duty cycle should be less than 0.5 (50%) so that the transformer could
@@ -68,20 +70,20 @@ float controller_step(float x)
  * prevent current inrush. Smaller steps make the reference reach its final value slower, but has
  * better effect on inrush current alleviation.
  */
-void controller_step_ref(float current, float target, float step)
+void controller_step_ref(float target, float step)
 {
-        // At any call of this function, we should have current <= target.
-        if (current < target)
+        if (controller_reference < target)
         {
-                current += step;
-                if (current > target)
+                controller_reference += step;
+                if (controller_reference >= target)
                 {
-                        current = target;
+                        controller_reference          = target;
+                        controller_ref_reached_target = true;
                 }
         }
-        controller_reference = current;
 }
-/**
+
+/*
  * This function is used to reset the controller variables so that when the converter is turned
  * on again it can start from a clean slate.
  */

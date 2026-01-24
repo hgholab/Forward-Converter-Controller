@@ -44,6 +44,8 @@ void TIM3_IRQHandler(void)
 
                         // Reset the controller.
                         controller_reset();
+
+                        controller_ref_reached_target = false;
                 }
                 else
                 {
