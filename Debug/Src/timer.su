@@ -2,5 +2,5 @@ C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter
 C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1775:22:__NVIC_ClearPendingIRQ	16	static
 C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1814:22:__NVIC_SetPriority	16	static
 ../Src/timer.c:21:6:TIM3_IRQHandler	16	static
-../Src/timer.c:68:6:tim2_init	16	static
-../Src/timer.c:125:6:tim3_init	16	static
+../Src/timer.c:72:6:tim2_init	16	static
+../Src/timer.c:129:6:tim3_init	16	static

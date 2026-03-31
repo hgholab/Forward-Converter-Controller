@@ -30,6 +30,8 @@ void TIM3_IRQHandler(void)
         {
                 if (converter_is_on)
                 {
+                        converter_is_on = false;
+
                         // Stop TIM2 counter.
                         TIM2->CR1 &= ~TIM_CR1_CEN;
 
@@ -49,6 +51,7 @@ void TIM3_IRQHandler(void)
                 }
                 else
                 {
+                        converter_is_on = true;
                         /*
                          * This delay makes sure that the output voltage and the filter inductor
                          * current is 0. The output filter and the load take only about 50 ms
@@ -62,7 +65,6 @@ void TIM3_IRQHandler(void)
                         // Start TIM2 counter.
                         TIM2->CR1 |= TIM_CR1_CEN;
                 }
-                converter_is_on = !converter_is_on;
         }
         button_last_push_status = button_is_pressed;
 }
@@ -100,10 +102,10 @@ void tim2_init(void)
 
         /*
          * Calculate the CCR2 value so that it triggers the ADC SOC (start of
-         * conversion) when 15% of the switching period has elapsed. This causes a better reading
+         * conversion) when 60% of the switching period has elapsed. This causes a better reading
          * where the voltage is less affected by switching noises.
          */
-        TIM2->CCR2 = (uint32_t)((15.0f / 100.0f) * TIM2_ARR);
+        TIM2->CCR2 = (uint32_t)((60.0f / 100.0f) * TIM2_ARR);
 
         // Generate an update first to load preloaded values.
         TIM2->EGR |= TIM_EGR_UG;

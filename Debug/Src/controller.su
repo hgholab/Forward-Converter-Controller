@@ -1,4 +1,3 @@
-../Src/controller.c:18:7:controller_step	40	static
-../Src/controller.c:71:6:controller_step_ref	24	static
-../Src/controller.c:88:6:controller_reset	4	static
-../Src/controller.c:97:7:controller_get_ref	4	static
+../Src/controller.c:19:7:controller_step	40	static
+../Src/controller.c:73:6:controller_step_ref	16	static
+../Src/controller.c:90:6:controller_reset	4	static

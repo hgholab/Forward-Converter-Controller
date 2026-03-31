@@ -3,6 +3,7 @@
 #define MAX_DUTY 0.45f
 
 bool controller_ref_reached_target = false;
+float controller_reference         = 0.0f; // Controller instantaneous reference value.
 
 /*
  * Static variables storing past samples:
@@ -15,33 +16,40 @@ bool controller_ref_reached_target = false;
 static float x1 = 0.0f, x2 = 0.0f;
 static float y1 = 0.0f, y2 = 0.0f;
 
-static float controller_reference = 0.0f; // Controller instantaneous reference value.
-
 float controller_step(float x)
 {
         /*
          * Coefficients derived from the z-domain transfer function:
          *
-         *            10.290000 - 18.280000 z^-1 + 8.094000 z^-2
+         *             5.131000 - 9.962000 z^-1 + 4.835000 z^-2
          * Gcd(z) = ----------------------------------------------
-         *             1.000000 -  0.903900 z^-1 - 0.096090 z^-2
+         *             1.000000 - 0.711700 z^-1 - 0.288300 z^-2
          *
          * Difference equation:
          *
-         *   y[k] = 10.290000 * x[k]
-         *        - 18.280000 * x[k-1]
-         *        +  8.094000 * x[k-2]
-         *        +  0.903900 * y[k-1]
-         *        +  0.096090 * y[k-2]
+         *   y[k] =  5.131000 * x[k]
+         *        -  9.962000 * x[k-1]
+         *        +  4.835000 * x[k-2]
+         *        +  0.711700 * y[k-1]
+         *        +  0.288300 * y[k-2]
          */
-        const float b0 = 10.29f;
-        const float b1 = -18.28f;
-        const float b2 = 8.094f;
-        const float c1 = 0.9039f;
-        const float c2 = 0.09609f;
+        const float b0 = 5.131000f;
+        const float b1 = -9.962000f;
+        const float b2 = 4.835000f;
+        const float c1 = 0.711700f;
+        const float c2 = 0.288300f;
 
         // Compute current output y[k] using the difference equation.
         float y = (b0 * x) + (b1 * x1) + (b2 * x2) + (c1 * y1) + (c2 * y2);
+
+        /*
+         * Clamp the compensator output to make sure that duty cycle stays equal or less than
+         * MAX_DUTY which we have chosen to be 0.45 so that we have enough headroom. In 2-switch
+         * forward converter, duty cycle should be less than 0.5 (50%) so that the transformer could
+         * demagnetize safely. Also it should stay above or equal to zero all the time.
+         */
+        y = y >= MAX_DUTY ? MAX_DUTY : y;
+        y = y <= 0.0f ? 0.0f : y;
 
         /*
          * Shift for next instant:
@@ -53,14 +61,6 @@ float controller_step(float x)
 
         y2 = y1;
         y1 = y;
-
-        /*
-         * Clamp the compensator output to make sure that duty cycle stays equal or less than
-         * MAX_DUTY which we have chosen to be 0.45 so that we have enough headroom. In 2-switch
-         * forward converter, duty cycle should be less than 0.5 (50%) so that the transformer could
-         * demagnetize safely.
-         */
-        y = y > MAX_DUTY ? MAX_DUTY : y;
 
         return y;
 }
@@ -94,9 +94,4 @@ void controller_reset(void)
         x2                   = 0.0f;
         y1                   = 0.0f;
         y2                   = 0.0f;
-}
-
-float controller_get_ref(void)
-{
-        return controller_reference;
 }

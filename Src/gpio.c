@@ -32,36 +32,6 @@
 
 typedef enum
 {
-        GPIO_PORT_A,
-        GPIO_PORT_B,
-        GPIO_PORT_C,
-        GPIO_PORT_D,
-        GPIO_PORT_E,
-        GPIO_PORT_H
-} gpio_port_t;
-
-typedef enum
-{
-        GPIO_PIN_0,
-        GPIO_PIN_1,
-        GPIO_PIN_2,
-        GPIO_PIN_3,
-        GPIO_PIN_4,
-        GPIO_PIN_5,
-        GPIO_PIN_6,
-        GPIO_PIN_7,
-        GPIO_PIN_8,
-        GPIO_PIN_9,
-        GPIO_PIN_10,
-        GPIO_PIN_11,
-        GPIO_PIN_12,
-        GPIO_PIN_13,
-        GPIO_PIN_14,
-        GPIO_PIN_15
-} gpio_pin_t;
-
-typedef enum
-{
         GPIO_PIN_MODE_INPUT,
         GPIO_PIN_MODE_OUTPUT,
         GPIO_PIN_MODE_ALTERNATE,
@@ -116,6 +86,18 @@ void gpio_init(void)
         gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_5, 1UL);
         gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_5, GPIO_PIN_MODE_ALTERNATE);
 
+        // Clear PA9 to enable the tranceiver.
+        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_9, GPIO_PIN_MODE_OUTPUT);
+        gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_9, GPIO_OTYPE_PUSH_PULL);
+        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_9, GPIO_PUPD_NONE);
+        gpio_clear_pin(GPIO_PORT_A, GPIO_PIN_9);
+
+        // Set up PA4 to toggle it inside ADC ISR.
+        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_4, GPIO_PIN_MODE_OUTPUT);
+        gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_4, GPIO_OTYPE_PUSH_PULL);
+        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_4, GPIO_PUPD_NONE);
+        gpio_clear_pin(GPIO_PORT_A, GPIO_PIN_4);
+
         // Set PA1 to analog mode to function as ADC input.
         gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_1, GPIO_PIN_MODE_ANALOG);
         gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_1, GPIO_PUPD_NONE);
@@ -146,6 +128,16 @@ bool gpio_button_is_pressed(void)
         }
 
         return button_is_pressed;
+}
+
+void gpio_set_pin(gpio_port_t port, gpio_pin_t pin)
+{
+        gpio_port_base_address[port]->BSRR = (1UL << pin);
+}
+
+void gpio_clear_pin(gpio_port_t port, gpio_pin_t pin)
+{
+        gpio_port_base_address[port]->BSRR = (1UL << (pin + 16U));
 }
 
 static bool gpio_read_pin_input(gpio_port_t port, gpio_pin_t pin)

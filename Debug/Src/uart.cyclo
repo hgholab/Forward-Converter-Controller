@@ -1,5 +1,0 @@
-C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1684:22:__NVIC_EnableIRQ	2
-C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1814:22:__NVIC_SetPriority	2
-../Src/uart.c:46:6:uart2_init	1
-../Src/uart.c:71:6:uart2_write_char_blocking	2
-../Src/uart.c:85:17:uart2_calc_brr	2

@@ -1,4 +1,4 @@
 C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1684:22:__NVIC_EnableIRQ	2
 C:/Users/hgholab/OneDrive/Source Code/Embedded Systems/Modules/forward_converter_controller/chip_headers/CMSIS/Include/core_cm4.h:1814:22:__NVIC_SetPriority	2
-../Src/adc.c:13:6:ADC_IRQHandler	1
-../Src/adc.c:43:6:adc_init	1
+../Src/adc.c:16:6:ADC_IRQHandler	2
+../Src/adc.c:52:6:adc_init	1
