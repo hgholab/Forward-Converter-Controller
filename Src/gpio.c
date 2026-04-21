@@ -86,6 +86,17 @@ void gpio_init(void)
         gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_5, 1UL);
         gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_5, GPIO_PIN_MODE_ALTERNATE);
 
+        // Set PA2 as USART2_TX.
+        gpio_set_pin_ospeed(GPIO_PORT_A, GPIO_PIN_2, GPIO_SPEED_VERY_HIGH);
+        gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_2, GPIO_OTYPE_PUSH_PULL);
+        gpio_set_pin_pupd(GPIO_PORT_A, GPIO_PIN_2, GPIO_PUPD_NONE);
+        gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_2, 7UL);
+        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_2, GPIO_PIN_MODE_ALTERNATE);
+
+        // Set PA3 as USART2_RX.
+        gpio_set_pin_alternate_function(GPIO_PORT_A, GPIO_PIN_3, 7UL);
+        gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_3, GPIO_PIN_MODE_ALTERNATE);
+
         // Clear PA9 to enable the tranceiver.
         gpio_set_pin_mode(GPIO_PORT_A, GPIO_PIN_9, GPIO_PIN_MODE_OUTPUT);
         gpio_set_pin_otype(GPIO_PORT_A, GPIO_PIN_9, GPIO_OTYPE_PUSH_PULL);

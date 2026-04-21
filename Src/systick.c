@@ -1,8 +1,13 @@
+#include <stdio.h>
+
 #include "stm32f4xx.h"
 
 #include "systick.h"
 
+#include "adc.h"
 #include "clock.h"
+#include "controller.h"
+#include "gpio.h"
 
 // SysTick frequency in Hz
 #define SYSTICK_FREQUENCY 1000UL
@@ -13,6 +18,24 @@ static volatile uint32_t systick_ticks = 0UL;
 void SysTick_Handler(void)
 {
         systick_ticks++;
+
+        if (systick_ticks % 400UL == 0)
+        {
+                for (int i = 0; i < 63; i++)
+                {
+                        printf("\b \b");
+                }
+
+                printf("       %05.2f%%              %4.2fV                  %05.2fV      ",
+                       control_signal * 100.0f,
+                       adc_value,
+                       adc_value * 5.0f / CONTROLLER_REF_TARGET);
+
+                // printf(" %05.2f%%, %4.2fV, %05.2fV",
+                //        control_signal * 100.0f,
+                //        adc_value,
+                //        adc_value * 5.0f / CONTROLLER_REF_TARGET);
+        }
 }
 
 void systick_init(void)
